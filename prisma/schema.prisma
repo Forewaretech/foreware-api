@@ -64,3 +64,62 @@ enum StatusEnum {
 //   name  String @unique
 //   posts Post[]
 // }
+
+model Form {
+  id              String      @id @default(uuid())
+  name            String
+  triggerType     TriggerType
+  bannerImage     String?
+  thankYouMessage String?
+  status          FormStatus  @default(ACTIVE)
+
+  targetEmails  String[] // native postgres array
+  assignedPages String[] // native postgres array
+
+  fields      FormField[]
+  submissions FormSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FormField {
+  id     String @id @default(uuid())
+  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId String
+
+  label    String
+  type     FieldType
+  required Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model FormSubmission {
+  id     String @id @default(uuid())
+  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId String
+
+  data Json // stores submitted values
+
+  createdAt DateTime @default(now())
+}
+
+enum TriggerType {
+  EMBED
+  POPUP
+}
+
+enum FormStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  TEXTAREA
+  NUMBER
+  SELECT
+  CHECKBOX
+}

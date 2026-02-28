@@ -13,3 +13,9 @@ export const presignedUrlSchema = z.object({
 });
 
 export type PresignedUrlDTO = z.infer<typeof presignedUrlSchema>["body"];
+
+export const urlSchema = z.object({
+  query: z.object({
+    url: z.url(),
+  }),
+});

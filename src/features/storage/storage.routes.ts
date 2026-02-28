@@ -1,8 +1,11 @@
 import { Router } from "express";
 
-import { presignedUrlController } from "./storage.controller.js";
+import {
+  deleteS3ObjectController,
+  presignedUrlController,
+} from "./storage.controller.js";
 import { validate } from "../../middlewares/validate.middleware.js";
-import { presignedUrlSchema } from "./storage.validation.js";
+import { presignedUrlSchema, urlSchema } from "./storage.validation.js";
 
 const router = Router();
 
@@ -11,5 +14,7 @@ router.put(
   validate(presignedUrlSchema),
   presignedUrlController,
 );
+
+router.delete("/presigned-url", validate(urlSchema), deleteS3ObjectController);
 
 export default router;
