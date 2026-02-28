@@ -14,6 +14,14 @@ export const createForm = async (req: Request, res: Response) => {
   });
 };
 
+export const updateFormController = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
+  const form = await formService.updateForm(req.params.id, req.body);
+  res.json({ success: true, data: form });
+};
+
 export const getForms = async (_: Request, res: Response) => {
   const forms = await formService.getAllForms();
   res.json({ success: true, data: forms });

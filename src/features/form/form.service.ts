@@ -6,7 +6,7 @@ import {
   TriggerType,
 } from "../../generated/prisma/enums.js";
 import { removeUndefinedFields } from "../../utils/prisma_helpers.js";
-import type { CreateFormDTO } from "./form.validation.js";
+import type { CreateFormDTO, UpdateFormDTO } from "./form.validation.js";
 
 export const createForm = async (data: CreateFormDTO) => {
   const form = await prisma.form.create({
@@ -19,18 +19,91 @@ export const createForm = async (data: CreateFormDTO) => {
       }),
       targetEmails: data.target_emails,
       assignedPages: data.assigned_pages ?? [],
-      status: (data.status?.toUpperCase() as FormStatus) ?? "ACTIVE",
+      status: (data.status?.toUpperCase() as FormStatus) ?? "INACTIVE",
       fields: {
         create: data.fields.map((field) => ({
           label: field.label,
           type: field.type.toUpperCase() as FieldType,
           required: field.required ?? false,
+          options: field.options ?? [],
         })),
       },
     },
   });
 
   return form;
+};
+
+// form.service.ts
+
+export const updateForm = async (id: string, data: UpdateFormDTO) => {
+  return await prisma.$transaction(async (tx) => {
+    // 1️⃣ Update form basic data
+    const updatedForm = await tx.form.update({
+      where: { id },
+      data: removeUndefinedFields({
+        name: data.name,
+        triggerType: data.trigger_type?.toUpperCase() as TriggerType,
+        bannerImage: data.banner_image,
+        thankYouMessage: data.thank_you_message,
+        targetEmails: data.target_emails,
+        assignedPages: data.assigned_pages,
+        status: data.status?.toUpperCase() as FormStatus,
+      }),
+    });
+
+    if (!data.fields) return updatedForm;
+
+    // 2️⃣ Get existing fields
+    const existingFields = await tx.formField.findMany({
+      where: { formId: id },
+    });
+
+    const existingIds = existingFields.map((f) => f.id);
+    const incomingIds = data.fields
+      .filter((f) => f.id)
+      .map((f) => f.id as string);
+
+    // 3️⃣ Delete removed fields
+    const idsToDelete = existingIds.filter(
+      (existingId) => !incomingIds.includes(existingId),
+    );
+
+    if (idsToDelete.length > 0) {
+      await tx.formField.deleteMany({
+        where: { id: { in: idsToDelete } },
+      });
+    }
+
+    // 4️⃣ Update or create fields
+    for (const field of data.fields) {
+      if (field.id) {
+        // Update existing
+        await tx.formField.update({
+          where: { id: field.id },
+          data: {
+            label: field.label,
+            type: field.type.toUpperCase() as FieldType,
+            required: field.required ?? false,
+            options: field.options ?? [],
+          },
+        });
+      } else {
+        // Create new
+        await tx.formField.create({
+          data: {
+            formId: id,
+            label: field.label,
+            type: field.type.toUpperCase() as FieldType,
+            required: field.required ?? false,
+            options: field.options ?? [],
+          },
+        });
+      }
+    }
+
+    return updatedForm;
+  });
 };
 
 export const getAllForms = async () => {

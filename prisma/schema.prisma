@@ -92,22 +92,27 @@ model FormField {
   type     FieldType
   required Boolean   @default(false)
 
+  options String[]
+
   createdAt DateTime @default(now())
 }
 
 model FormSubmission {
-  id     String @id @default(uuid())
-  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  id   String @id @default(uuid())
+  form Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
+
   formId String
 
-  data Json // stores submitted values
+  data Json
 
   createdAt DateTime @default(now())
 }
 
 enum TriggerType {
   EMBED
-  POPUP
+  POPUP_LOAD
+  POPUP_SCROLL
+  POPUP_TIME
 }
 
 enum FormStatus {
@@ -121,5 +126,6 @@ enum FieldType {
   TEXTAREA
   NUMBER
   SELECT
+  PHONE
   CHECKBOX
 }
