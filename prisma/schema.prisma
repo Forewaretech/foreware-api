@@ -129,3 +129,40 @@ enum FieldType {
   PHONE
   CHECKBOX
 }
+
+model TrackingCode {
+  id          String         @id @default(uuid())
+  name        String
+  platform    Platform
+  placement   Placement
+  type        TrackingType
+  codeSnippet String         @db.Text
+  status      TrackingStatus @default(INACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Platform {
+  GOOGLE_ADS
+  META_PIXEL
+  GOOGLE_ANALYTICS
+  LINKEDIN_INSIGHT
+}
+
+enum Placement {
+  HEADER
+  BODY
+  FOOTER
+}
+
+enum TrackingType {
+  CONVERSION
+  PAGE
+  EVENT
+}
+
+enum TrackingStatus {
+  ACTIVE
+  INACTIVE
+}
