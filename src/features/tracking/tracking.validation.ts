@@ -11,7 +11,6 @@ export enum PlatformEnum {
 export enum PlacementEnum {
   header = "header",
   body = "body",
-  footer = "footer",
 }
 
 export enum TrackingTypeEnum {
@@ -22,9 +21,9 @@ export enum TrackingTypeEnum {
 
 const trackingBodySchema = z.object({
   name: z.string().min(1),
-  platform: z.nativeEnum(PlatformEnum),
-  placement: z.nativeEnum(PlacementEnum),
-  type: z.nativeEnum(TrackingTypeEnum),
+  platform: z.enum(PlatformEnum),
+  placement: z.enum(PlacementEnum),
+  type: z.enum(TrackingTypeEnum),
   codeSnippet: z.string().min(1),
   status: z.enum(["active", "inactive"]).optional(),
 });
@@ -35,6 +34,12 @@ export const createTrackingSchema = z.object({
 
 export const updateTrackingSchema = z.object({
   body: trackingBodySchema.partial(),
+});
+
+export const trackingQuerySchema = z.object({
+  query: z.object({
+    placement: z.enum(PlacementEnum),
+  }),
 });
 
 export type CreateTrackingDTO = z.infer<typeof trackingBodySchema>;

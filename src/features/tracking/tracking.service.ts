@@ -57,3 +57,22 @@ export const updateTrackingCode = async (
 export const deleteTrackingCode = async (id: string) => {
   return prisma.trackingCode.delete({ where: { id } });
 };
+
+export const getPublicTrackingCodes = async (placement?: string) => {
+  const whereClause: any = {
+    status: TrackingStatus.ACTIVE,
+  };
+
+  if (placement) {
+    whereClause.placement = placement.toUpperCase() as Placement;
+  }
+
+  return prisma.trackingCode.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      placement: true,
+      codeSnippet: true,
+    },
+  });
+};

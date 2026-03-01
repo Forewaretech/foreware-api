@@ -1,7 +1,7 @@
 import cors from "cors";
 import { AppError } from "../utils/AppError.js";
 
-const allowedOrigins = ["http://localhost:8080"];
+const allowedOrigins = ["http://localhost:8080", "http://localhost:3000"];
 
 export const corsOptions = {
   origin: function (origin: any, callback: any) {

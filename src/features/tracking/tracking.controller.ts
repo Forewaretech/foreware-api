@@ -31,3 +31,19 @@ export const deleteTrackingController = async (
   await trackingService.deleteTrackingCode(req.params.id);
   res.json({ success: true });
 };
+
+export const getPublicTrackingController = async (
+  req: Request,
+  res: Response,
+) => {
+  const { placement } = req.query;
+
+  const trackingCodes = await trackingService.getPublicTrackingCodes(
+    placement as string | undefined,
+  );
+
+  res.json({
+    success: true,
+    data: trackingCodes,
+  });
+};

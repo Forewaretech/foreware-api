@@ -153,7 +153,6 @@ enum Platform {
 enum Placement {
   HEADER
   BODY
-  FOOTER
 }
 
 enum TrackingType {
