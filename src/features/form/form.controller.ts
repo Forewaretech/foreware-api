@@ -27,6 +27,16 @@ export const getForms = async (_: Request, res: Response) => {
   res.json({ success: true, data: forms });
 };
 
+export const getFormsByStatusController = async (
+  req: Request,
+  res: Response,
+) => {
+  const forms = await formService.getActiveForms({
+    status: req.query.status as string,
+  });
+  res.json({ success: true, data: forms });
+};
+
 export const getForm = async (req: Request, res: Response) => {
   const form = await formService.getFormById(req.params.id as string);
 

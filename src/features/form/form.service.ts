@@ -114,6 +114,17 @@ export const getAllForms = async () => {
   });
 };
 
+export const getActiveForms = async (op: { status: string }) => {
+  return await prisma.form.findMany({
+    where: {
+      status: op.status as FormStatus,
+    },
+    include: {
+      fields: true,
+    },
+  });
+};
+
 export const getFormById = async (id: string) => {
   return await prisma.form.findUnique({
     where: { id },

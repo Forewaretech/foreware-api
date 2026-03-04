@@ -79,6 +79,8 @@ model Form {
   fields      FormField[]
   submissions FormSubmission[]
 
+  displayBehavior DisplayBehavior @default(ONCE_PER_BROWSER)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -97,15 +99,10 @@ model FormField {
   createdAt DateTime @default(now())
 }
 
-model FormSubmission {
-  id   String @id @default(uuid())
-  form Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
-
-  formId String
-
-  data Json
-
-  createdAt DateTime @default(now())
+enum DisplayBehavior {
+  ALWAYS
+  ONCE_PER_BROWSER
+  ONCE_PER_SESSION
 }
 
 enum TriggerType {
@@ -164,4 +161,33 @@ enum TrackingType {
 enum TrackingStatus {
   ACTIVE
   INACTIVE
+}
+
+model Lead {
+  id          String           @id @default(cuid())
+  email       String           @unique
+  name        String?
+  status      LeadStatus       @default(NEW)
+  source      String?
+  submissions FormSubmission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  LOST
+  CLOSED
+}
+
+model FormSubmission {
+  id        String   @id @default(uuid())
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId    String
+  data      Json
+  leadId    String?
+  lead      Lead?    @relation(fields: [leadId], references: [id])
+  createdAt DateTime @default(now())
 }
