@@ -8,6 +8,7 @@ import trackingRoutes from "./features/tracking/tracking.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import leadRoutes from "./features/lead/lead.routes.js";
 import submissionRoutes from "./features/submission/submission.route.js";
+import authRoutes from "./features/auth/auth.routes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api/forms", formsRoutes);
 app.use("/api/tracking-codes", trackingRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/submissions", submissionRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
 

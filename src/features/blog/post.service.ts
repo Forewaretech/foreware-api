@@ -1,6 +1,7 @@
 import { prisma } from "../../config/db.js";
 import { AppError } from "../../utils/AppError.js";
 import { removeUndefinedFields } from "../../utils/prisma_helpers.js";
+import { logActivity } from "../activity/activity.service.js";
 import { deleteS3Object } from "../storage/storage.service.js";
 import type { PostDTO } from "./post.validation.js";
 
@@ -52,7 +53,7 @@ export const createPost = async (postData: PostDTO) => {
     throw new AppError("User not found", 404);
   }
 
-  return await prisma.post.create({
+  const createdPost = await prisma.post.create({
     data: {
       title: postData.title,
       content: postData.content,
@@ -67,6 +68,16 @@ export const createPost = async (postData: PostDTO) => {
       userId: superAdmin.id,
     },
   });
+
+  await logActivity({
+    type: "post",
+    title: "New post created",
+    message: `Blog post published: ${createdPost.title}`,
+    metadata: { postId: createdPost.id },
+    userId: user.id,
+  });
+
+  return createdPost;
 };
 
 export const updatePost = async (id: string, updateData: Partial<PostDTO>) => {
