@@ -80,9 +80,17 @@ model Form {
   submissions FormSubmission[]
 
   displayBehavior DisplayBehavior @default(ONCE_PER_BROWSER)
+  closeBehavior   CloseBehavior   @default(HIDE_FOR_24H)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum CloseBehavior {
+  SHOW_AGAIN
+  HIDE_FOR_SESSION
+  HIDE_FOR_24H
+  HIDE_FOR_7D
 }
 
 model FormField {

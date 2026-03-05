@@ -45,6 +45,9 @@ export const getAllLeads = async () => {
         select: {
           form: {
             select: {
+              thankYouMessage: true,
+              displayBehavior: true,
+              closeBehavior: true,
               assignedPages: true,
             },
           },
