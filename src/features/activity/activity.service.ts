@@ -1,9 +1,8 @@
 import { prisma } from "../../config/db.js";
 
 export async function logActivity(data: {
-  type: string;
-  title: string;
-  message: string;
+  action: string;
+  detail: string;
   userId: string;
   metadata: any;
 }) {
@@ -11,3 +10,12 @@ export async function logActivity(data: {
     data,
   });
 }
+
+export const getAllActivityLogs = async (option: { limit: number }) => {
+  return await prisma.activityLog.findMany({
+    take: option.limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};

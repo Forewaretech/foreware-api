@@ -2,10 +2,15 @@ import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
-import { getAuthUser, loginUser } from "./auth.service.js";
-import { deleteRefreshToken, generateAccessToken } from "./jwt.service.js";
+import { getAuthUser, loginUser, refreshToken } from "./auth.service.js";
 import { ACCESS_TOKEN_AGE, REFRESH_TOKEN_AGE } from "./constants.js";
-import { success } from "zod";
+import {
+  deleteRefreshToken,
+  generateAccessToken,
+  generateRefreshToken,
+  hashToken,
+} from "./jwt.service.js";
+import { prisma } from "../../config/db.js";
 
 export const isProduction =
   process.env.NODE_ENV === "production" ? true : false;
@@ -42,32 +47,68 @@ export async function loginController(req: Request, res: Response) {
 
 export const refreshTokenController = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.refreshToken;
-    if (!token) return res.status(401).json({ message: "No refresh token" });
+    let token = req.cookies.refreshToken;
 
-    const decoded = jwt.verify(
-      token,
-      process.env.REFRESH_SECRET!,
-    ) as JwtPayloadWithUserId;
+    if (req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
 
-    if (!decoded?.userId)
-      return res.status(403).json({ message: "Invalid token" });
+    if (!token) {
+      return res.status(401).json({ message: "No refresh token" });
+    }
 
-    const accessToken = generateAccessToken(decoded.userId);
+    const { newAccessToken, newRefreshToken } = await refreshToken({ token });
 
-    res.cookie("accessToken", accessToken, {
+    res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       maxAge: ACCESS_TOKEN_AGE,
       secure: isProduction,
+      sameSite: "strict",
     });
 
-    return res.json({ accessToken });
-  } catch (err: any) {
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      maxAge: REFRESH_TOKEN_AGE,
+      secure: isProduction,
+      sameSite: "strict",
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
     return res
-      .status(401)
-      .json({ message: "Refresh failed", error: err.message });
+      .status(500)
+      .json({ message: "Refresh failed", error: (err as Error).message });
   }
 };
+
+// export const refreshTokenController = async (req: Request, res: Response) => {
+//   try {
+//     const token = req.cookies.refreshToken;
+//     if (!token) return res.status(401).json({ message: "No refresh token" });
+
+//     const decoded = jwt.verify(
+//       token,
+//       process.env.REFRESH_SECRET!,
+//     ) as JwtPayloadWithUserId;
+
+//     if (!decoded?.userId)
+//       return res.status(403).json({ message: "Invalid token" });
+
+//     const accessToken = generateAccessToken(decoded.userId);
+
+//     res.cookie("accessToken", accessToken, {
+//       httpOnly: true,
+//       maxAge: ACCESS_TOKEN_AGE,
+//       secure: isProduction,
+//     });
+
+//     return res.json({ accessToken });
+//   } catch (err: any) {
+//     return res
+//       .status(401)
+//       .json({ message: "Refresh failed", error: err.message });
+//   }
+// };
 
 // export const requestPasswordResetController = async (
 //   req: Request,

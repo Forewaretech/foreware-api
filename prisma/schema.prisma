@@ -39,6 +39,7 @@ enum UserRole {
 model Post {
   id                   String     @id @default(uuid())
   title                String
+  summary              String
   slug                 String     @unique
   status               StatusEnum
   featuredImage        String?
@@ -212,9 +213,8 @@ model FormSubmission {
 
 model ActivityLog {
   id        String   @id @default(uuid())
-  type      String
-  message   String
-  title     String
+  action    String?
+  detail    String?
   metadata  Json?
   userId    String
   user      User     @relation(fields: [userId], references: [id])

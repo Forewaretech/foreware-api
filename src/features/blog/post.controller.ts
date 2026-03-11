@@ -1,3 +1,4 @@
+import type { StatusEnum } from "../../generated/prisma/enums.js";
 import {
   createPost,
   getAllPosts,
@@ -8,15 +9,19 @@ import {
 
 import type { Response, Request } from "express";
 
-export const getPostsController = async (req: Request, res: Response) => {
-  const posts = await getAllPosts();
-  res.json(posts);
+export const getPostsController = async (
+  req: Request<any, any, any, { status: StatusEnum }>,
+  res: Response,
+) => {
+  const posts = await getAllPosts({ status: req.query.status });
+  res.json({ success: true, data: posts });
 };
 
 export const createPostController = async (req: Request, res: Response) => {
   const {
     title,
     content,
+    summary,
     slug,
     status,
     category,
@@ -27,18 +32,22 @@ export const createPostController = async (req: Request, res: Response) => {
     seoTitle,
   } = req.body;
 
-  const newPost = await createPost({
-    title,
-    content,
-    slug,
-    status,
-    category,
-    featuredImage,
-    featuredImageCaption,
-    featuredImageTitle,
-    seoDescription,
-    seoTitle,
-  });
+  const newPost = await createPost(
+    {
+      title,
+      content,
+      slug,
+      status,
+      category,
+      summary,
+      featuredImage,
+      featuredImageCaption,
+      featuredImageTitle,
+      seoDescription,
+      seoTitle,
+    },
+    req.user?.id ?? "",
+  );
 
   res.status(201).json(newPost);
 };

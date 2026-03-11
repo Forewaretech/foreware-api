@@ -12,6 +12,7 @@ import {
   getPostController,
   updatePostController,
 } from "./post.controller.js";
+import { authenticate } from "../../middlewares/authenticate.middleware.js";
 
 const router = Router();
 
@@ -24,6 +25,11 @@ router.patch(
   validate(updatePostValidationSchema),
   updatePostController,
 );
-router.post("/", validate(postValidationSchema), createPostController);
+router.post(
+  "/",
+  validate(postValidationSchema),
+  authenticate,
+  createPostController,
+);
 
 export default router;

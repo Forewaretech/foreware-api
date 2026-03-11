@@ -1,12 +1,22 @@
 import { prisma } from "../../config/db.js";
+import type { StatusEnum } from "../../generated/prisma/enums.js";
 import { AppError } from "../../utils/AppError.js";
 import { removeUndefinedFields } from "../../utils/prisma_helpers.js";
 import { logActivity } from "../activity/activity.service.js";
 import { deleteS3Object } from "../storage/storage.service.js";
 import type { PostDTO } from "./post.validation.js";
 
-export const getAllPosts = async () => {
-  return await prisma.post.findMany();
+export const getAllPosts = async (o?: { status?: StatusEnum }) => {
+  console.log({ ...(o?.status ? { status: o.status } : {}) });
+  return await prisma.post.findMany({
+    where: {
+      // 2. Only apply the filter if o.status actually exists
+      ...(o?.status ? { status: o.status } : {}),
+    },
+    orderBy: {
+      createdAt: "desc", // Good practice to keep results consistent
+    },
+  });
 };
 
 // export const deletePost = async (id: string) => {
@@ -16,7 +26,7 @@ export const getAllPosts = async () => {
 export const deletePost = async (id: string) => {
   const post = await prisma.post.findUnique({
     where: { id },
-    select: { featuredImage: true },
+    select: { featuredImage: true, title: true, id: true, userId: true },
   });
 
   if (!post) throw new AppError("Post not found", 404);
@@ -31,6 +41,13 @@ export const deletePost = async (id: string) => {
     });
   }
 
+  await logActivity({
+    action: "Deleted post",
+    detail: `Title: ${post.title}`,
+    metadata: { postId: post.id },
+    userId: post.userId,
+  });
+
   // This will run even if deleteS3Object is still working or failed
   return await prisma.post.delete({
     where: { id },
@@ -41,11 +58,11 @@ export const getPost = async (id: string) => {
   return await prisma.post.findFirst({ where: { id } });
 };
 
-export const createPost = async (postData: PostDTO) => {
+export const createPost = async (postData: PostDTO, userId: string) => {
   // User that is creating the post
   const superAdmin = await prisma.user.findFirst({
     where: {
-      role: "SUPER_ADMIN",
+      id: userId,
     },
   });
 
@@ -53,11 +70,13 @@ export const createPost = async (postData: PostDTO) => {
     throw new AppError("User not found", 404);
   }
 
+  console.log("postData: ", postData);
   const createdPost = await prisma.post.create({
     data: {
       title: postData.title,
       content: postData.content,
       slug: postData.slug,
+      summary: postData.summary,
       status: postData.status,
       category: postData.category || null,
       featuredImage: postData.featuredImage || null,
@@ -70,11 +89,10 @@ export const createPost = async (postData: PostDTO) => {
   });
 
   await logActivity({
-    type: "post",
-    title: "New post created",
-    message: `Blog post published: ${createdPost.title}`,
+    action: "New post created",
+    detail: `Title: ${createdPost.title}`,
     metadata: { postId: createdPost.id },
-    userId: user.id,
+    userId: createdPost.userId,
   });
 
   return createdPost;
@@ -90,6 +108,13 @@ export const updatePost = async (id: string, updateData: Partial<PostDTO>) => {
 
   // 1. Remove undefined keys so Prisma doesn't complain
   const cleanData = removeUndefinedFields(updateData);
+
+  await logActivity({
+    action: "Post updated",
+    detail: `Updated: ${existingPost.title}`,
+    metadata: { postId: existingPost.id },
+    userId: existingPost.userId,
+  });
 
   return await prisma.post.update({
     where: { id },

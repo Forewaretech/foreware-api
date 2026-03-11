@@ -24,6 +24,7 @@ export const updatePostValidationSchema = z.object({
     featuredImageTitle: z.string().optional(),
     featuredImageCaption: z.string().optional(),
     content: z.string().min(1, "content is required").optional(),
+    summary: z.string().min(1, "summary is required").optional(),
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
     category: z.string().optional(),
@@ -36,4 +37,6 @@ export const idValidationSchema = z.object({
   }),
 });
 
-export type PostDTO = z.infer<typeof postValidationSchema>["body"];
+export type PostDTO = z.infer<typeof postValidationSchema>["body"] & {
+  summary: string;
+};

@@ -4,8 +4,12 @@ import { AppError } from "../../utils/AppError.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  hashToken,
   saveRefreshToken,
 } from "./jwt.service.js";
+import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
+import jwt from "jsonwebtoken";
+import { REFRESH_TOKEN_AGE } from "./constants.js";
 
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findFirst({ where: { email } });
@@ -35,6 +39,56 @@ export const getAuthUser = (id: string) => {
 
   return foundUser;
 };
+
+export const refreshToken = async (data: { token: string }) => {
+  const { token } = data;
+
+  try {
+    // Step 1 — Verify JWT signature
+    let decoded: JwtPayloadWithUserId;
+
+    try {
+      decoded = jwt.verify(
+        token,
+        process.env.REFRESH_SECRET!,
+      ) as JwtPayloadWithUserId;
+    } catch {
+      throw new AppError("Invalid refresh token", 403);
+    }
+
+    // Step 2 — Hash incoming token
+    const incomingHash = hashToken(token);
+
+    // Step 3 — Ensure token exists in DB
+    const existing = await prisma.refreshToken.findFirst({
+      where: { token: incomingHash },
+    });
+
+    if (!existing) {
+      throw new AppError("Token revoked or expired", 403);
+    }
+
+    // Step 4 — Rotate refresh token
+
+    const newRefreshToken = generateRefreshToken(decoded.userId);
+
+    await saveRefreshToken({
+      userId: decoded.userId,
+      token: newRefreshToken,
+    });
+
+    // Step 5 — Issue new access token
+    const newAccessToken = generateAccessToken(decoded.userId);
+
+    return {
+      newAccessToken,
+      newRefreshToken,
+    };
+  } catch (err) {
+    throw new AppError("Refresh failed: " + (err as Error).message, 500);
+  }
+};
+
 // TODO: Implement for reseting password
 // export const resetPassword = async (token: string, newPassword: string) => {
 //   if (!token || !newPassword) {

@@ -9,11 +9,19 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import leadRoutes from "./features/lead/lead.routes.js";
 import submissionRoutes from "./features/submission/submission.route.js";
 import authRoutes from "./features/auth/auth.routes.js";
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
+import activityRoutes from "./features/activity/activitty.routes.js";
 
 const app = express();
 
 app.use(corsMiddleware);
 app.use(express.json());
+app.use(corsMiddleware);
+app.use(cookieParser());
+// app.use(helmet());
+app.use(morgan("dev"));
+// app.use(express.static("public"));
 
 // Feature Routes
 app.use("/api/users", userRoutes);
@@ -24,6 +32,7 @@ app.use("/api/tracking-codes", trackingRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/activity-logs", activityRoutes);
 
 app.use(errorHandler);
 

@@ -5,6 +5,7 @@ import {
   REFRESH_EXPIRES_IN,
   REFRESH_TOKEN_AGE,
 } from "./constants.js";
+import crypto from "crypto";
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET!;
 const REFRESH_SECRET = process.env.REFRESH_SECRET!;
@@ -26,10 +27,14 @@ export const saveRefreshToken = async ({
   userId: string;
   token: string;
 }) => {
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+
+  const hashed = hashToken(token);
+
   await prisma.refreshToken.create({
     data: {
       userId,
-      token,
+      token: hashed,
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_AGE),
     },
   });
@@ -44,7 +49,7 @@ export const deleteRefreshToken = async (refreshToken: string) => {
 //   const rawToken = crypto.randomBytes(32).toString("hex");
 
 //   const expiresAt = new Date(Date.now() + ACCESS_TOKEN_AGE);
-
+//  await prisma.passwordResetToken.deleteMany({ where: { userId } });
 //   await PasswordResetToken.create({
 //     user: userId,
 //     token: rawToken,
@@ -53,3 +58,7 @@ export const deleteRefreshToken = async (refreshToken: string) => {
 
 //   return rawToken;
 // };
+
+export function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
