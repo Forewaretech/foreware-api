@@ -59,7 +59,7 @@ export const deletePostsController = async (req: Request, res: Response) => {
 
 export const getPostController = async (req: Request, res: Response) => {
   const posts = await getPost(req.params.id as string);
-  res.status(200).json(posts);
+  res.status(200).json({ success: true, data: posts });
 };
 
 export const updatePostController = async (req: Request, res: Response) => {

@@ -18,7 +18,7 @@ const router = Router();
 
 router.get("/", getPostsController);
 router.delete("/:id", validate(idValidationSchema), deletePostsController);
-router.get("/:id", validate(idValidationSchema), getPostController);
+router.get("/:id", getPostController);
 router.patch(
   "/:id",
   validate(idValidationSchema),

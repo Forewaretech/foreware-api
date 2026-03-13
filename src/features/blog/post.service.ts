@@ -54,8 +54,12 @@ export const deletePost = async (id: string) => {
   });
 };
 
-export const getPost = async (id: string) => {
-  return await prisma.post.findFirst({ where: { id } });
+export const getPost = async (identifier: string) => {
+  return await prisma.post.findFirst({
+    where: {
+      OR: [{ id: identifier }, { slug: identifier }],
+    },
+  });
 };
 
 export const createPost = async (postData: PostDTO, userId: string) => {
