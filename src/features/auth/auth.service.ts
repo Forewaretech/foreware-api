@@ -9,7 +9,6 @@ import {
 } from "./jwt.service.js";
 import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
 import jwt from "jsonwebtoken";
-import { REFRESH_TOKEN_AGE } from "./constants.js";
 
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findFirst({ where: { email } });
@@ -43,6 +42,7 @@ export const getAuthUser = (id: string) => {
 export const refreshToken = async (data: { token: string }) => {
   const { token } = data;
 
+  console.log("TOKEN: ", token);
   try {
     // Step 1 — Verify JWT signature
     let decoded: JwtPayloadWithUserId;
@@ -85,39 +85,51 @@ export const refreshToken = async (data: { token: string }) => {
       newRefreshToken,
     };
   } catch (err) {
-    throw new AppError("Refresh failed: " + (err as Error).message, 500);
+    throw new AppError(
+      "Failed to refresh token: " + (err as Error).message,
+      500,
+    );
   }
 };
 
 // TODO: Implement for reseting password
-// export const resetPassword = async (token: string, newPassword: string) => {
-//   if (!token || !newPassword) {
-//     throw new AppError("Token and new password are required", 200);
-//   }
+export const resetPassword = async (data: {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+}) => {
+  const { userId, currentPassword, newPassword } = data;
 
-//   // Find token in DB
-//   const resetTokenDoc = await PasswordResetToken.findOne({ token });
+  // Get the user
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
 
-//   if (!resetTokenDoc || resetTokenDoc.expiresAt < new Date()) {
-//     throw new AppError("Invalid or expired token", 401);
-//   }
+  if (!user) throw new AppError("User not found", 404);
 
-//   // Get the user
-//   const user = await User.findById(resetTokenDoc.user);
-//   if (!user) throw new AppError("User not found", 404);
+  // Compare current password for match
+  const validPassword = await bcrypt.compare(currentPassword, user.password!);
 
-//   // Hash and save the new password
-//   const hashed = await bcrypt.hash(newPassword, 10);
-//   user.password = hashed;
-//   user.mustChangePassword = false;
+  console.log("validPassword: ", validPassword);
 
-//   await user.save();
+  if (!validPassword) throw new AppError("Invalid credentials", 401);
 
-//   // Invalidate token after use
-//   await PasswordResetToken.deleteOne({ id: resetTokenDoc.id });
+  // Hash and save the new password
+  const hashed = await bcrypt.hash(newPassword, 12);
 
-//   return { message: "Password reset successful" };
-// };
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      password: hashed,
+    },
+  });
+
+  return updatedUser;
+};
 
 // export const requestPasswordReset = async (email: string) => {
 //   const user = await User.findOne({ email });

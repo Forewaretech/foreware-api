@@ -2,7 +2,12 @@ import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
-import { getAuthUser, loginUser, refreshToken } from "./auth.service.js";
+import {
+  getAuthUser,
+  loginUser,
+  refreshToken,
+  resetPassword,
+} from "./auth.service.js";
 import { ACCESS_TOKEN_AGE, REFRESH_TOKEN_AGE } from "./constants.js";
 import {
   deleteRefreshToken,
@@ -126,18 +131,17 @@ export const refreshTokenController = async (req: Request, res: Response) => {
 //   }
 // };
 
-// export const resetPasswordController = async (req: Request, res: Response) => {
-//   try {
-//     const { token, newPassword } = req.body;
+export const resetPasswordController = async (req: Request, res: Response) => {
+  const { currentPassword, newPassword } = req.body;
 
-//     const message = await resetPassword(token, newPassword);
+  const data = await resetPassword({
+    userId: req.user?.id ?? "",
+    currentPassword,
+    newPassword,
+  });
 
-//     res.status(200).json(message);
-//   } catch (err: any) {
-//     console.error("Reset password error:", err.message);
-//     return res.status(500).json({ message: err.message || "Server error" });
-//   }
-// };
+  res.status(200).json({ success: true, data });
+};
 
 export const meController = async (req: Request, res: Response) => {
   const authUser = await getAuthUser(req.user?.id!);
@@ -147,6 +151,8 @@ export const meController = async (req: Request, res: Response) => {
 
 // Handles user logout, deleting token in the database.
 export async function logoutController(req: Request, res: Response) {
+  console.log("TOKENS: ", req.cookies.refreshToken, req.body.refreshToken);
+
   const refreshToken =
     req.cookies.refreshToken ||
     req.body.refreshToken ||
@@ -155,9 +161,6 @@ export async function logoutController(req: Request, res: Response) {
   if (!refreshToken) {
     return res.status(400).json({ message: "No refresh token provided" });
   }
-
-  // Remove refresh token from DB
-  await deleteRefreshToken(refreshToken);
 
   // Clear cookies if they exist
   res.clearCookie("accessToken");

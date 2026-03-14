@@ -12,13 +12,13 @@ export const createForm = async (data: CreateFormDTO) => {
   const form = await prisma.form.create({
     data: {
       name: data.name,
-      triggerType: data.trigger_type.toUpperCase() as TriggerType,
+      triggerType: data.triggerType.toUpperCase() as TriggerType,
       ...removeUndefinedFields({
-        bannerImage: data.banner_image,
-        thankYouMessage: data.thank_you_message,
+        bannerImage: data.bannerImage,
+        thankYouMessage: data.thankYouMessage,
       }),
-      targetEmails: data.target_emails,
-      assignedPages: data.assigned_pages ?? [],
+      targetEmails: data.targetEmails ?? [],
+      assignedPages: data.assignedPages ?? [],
       status: (data.status?.toUpperCase() as FormStatus) ?? "INACTIVE",
       fields: {
         create: data.fields.map((field) => ({
@@ -37,24 +37,26 @@ export const createForm = async (data: CreateFormDTO) => {
 // form.service.ts
 
 export const updateForm = async (id: string, data: UpdateFormDTO) => {
+  console.log("UPDATE: ", data, data.status?.toUpperCase());
+
   return await prisma.$transaction(async (tx) => {
-    // 1️⃣ Update form basic data
+    // 1️ Update form basic data
     const updatedForm = await tx.form.update({
       where: { id },
       data: removeUndefinedFields({
         name: data.name,
-        triggerType: data.trigger_type?.toUpperCase() as TriggerType,
-        bannerImage: data.banner_image,
-        thankYouMessage: data.thank_you_message,
-        targetEmails: data.target_emails,
-        assignedPages: data.assigned_pages,
+        triggerType: data.triggerType?.toUpperCase() as TriggerType,
+        bannerImage: data.bannerImage,
+        thankYouMessage: data.thankYouMessage,
+        targetEmails: data.targetEmails,
+        assignedPages: data.assignedPages,
         status: data.status?.toUpperCase() as FormStatus,
       }),
     });
 
     if (!data.fields) return updatedForm;
 
-    // 2️⃣ Get existing fields
+    // 2️ Get existing fields
     const existingFields = await tx.formField.findMany({
       where: { formId: id },
     });
@@ -64,7 +66,7 @@ export const updateForm = async (id: string, data: UpdateFormDTO) => {
       .filter((f) => f.id)
       .map((f) => f.id as string);
 
-    // 3️⃣ Delete removed fields
+    // 3️ Delete removed fields
     const idsToDelete = existingIds.filter(
       (existingId) => !incomingIds.includes(existingId),
     );
@@ -75,7 +77,7 @@ export const updateForm = async (id: string, data: UpdateFormDTO) => {
       });
     }
 
-    // 4️⃣ Update or create fields
+    // 4️ Update or create fields
     for (const field of data.fields) {
       if (field.id) {
         // Update existing

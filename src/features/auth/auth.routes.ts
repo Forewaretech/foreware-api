@@ -5,6 +5,7 @@ import {
   logoutController,
   meController,
   refreshTokenController,
+  resetPasswordController,
 } from "./auth.controller.js";
 import { authenticate } from "../../middlewares/authenticate.middleware.js";
 
@@ -15,7 +16,7 @@ const router = express.Router();
 router.post("/login", loginController);
 router.post("/refresh-token", refreshTokenController);
 // router.post("/request-password-reset", requestPasswordResetController);
-// router.post("/reset-password", resetPasswordController);
+router.post("/reset-password", authenticate, resetPasswordController);
 router.get("/me", authenticate, meController);
 router.post("/logout", logoutController);
 

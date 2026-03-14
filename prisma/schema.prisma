@@ -229,3 +229,17 @@ model RefreshToken {
   createdAt DateTime @default(now())
   expiresAt DateTime
 }
+
+model Contact {
+  id      String @id @default(uuid())
+  name    String
+  email   String
+  phone   String
+  message String
+}
+
+model EmailTo {
+  id    String  @id @default(uuid())
+  email String
+  cc    String?
+}

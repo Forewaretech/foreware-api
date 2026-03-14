@@ -12,6 +12,7 @@ import authRoutes from "./features/auth/auth.routes.js";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import activityRoutes from "./features/activity/activitty.routes.js";
+import emailToRoutes from "./features/emailto/emailto.routes.js";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api/leads", leadRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/activity-logs", activityRoutes);
+app.use("/api/emailto", emailToRoutes);
 
 app.use(errorHandler);
 

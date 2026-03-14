@@ -1,10 +1,9 @@
 // form.controller.ts
 import type { Request, Response } from "express";
 import * as formService from "./form.service.js";
-import { createFormSchema } from "./form.validation.js";
 
 export const createForm = async (req: Request, res: Response) => {
-  const parsed = createFormSchema.parse(req.body);
+  const parsed = req.body;
 
   const form = await formService.createForm(parsed);
 
