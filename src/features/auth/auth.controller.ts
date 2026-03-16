@@ -1,5 +1,19 @@
 import type { Request, Response } from "express";
 
+const cookieOptions: any = {
+  httpOnly: true,
+  maxAge: 24 * 60 * 60 * 1000,
+};
+
+// Check if we are on Render (Production)
+if (process.env.NODE_ENV === "production") {
+  cookieOptions.secure = true;
+  cookieOptions.sameSite = "none"; // Required for Vercel -> Render
+} else {
+  cookieOptions.secure = false;
+  cookieOptions.sameSite = "lax"; // Standard for localhost
+}
+
 import {
   getAuthUser,
   loginUser,
@@ -18,17 +32,9 @@ export async function loginController(req: Request, res: Response) {
   try {
     const { accessToken, refreshToken } = await loginUser(email, password);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      maxAge: ACCESS_TOKEN_AGE,
-      secure: isProduction,
-    });
+    res.cookie("accessToken", accessToken, cookieOptions);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      maxAge: REFRESH_TOKEN_AGE,
-      secure: isProduction,
-    });
+    res.cookie("refreshToken", refreshToken, cookieOptions);
 
     res.json({ success: true, data: { accessToken, refreshToken } });
   } catch (err: any) {
@@ -55,19 +61,9 @@ export const refreshTokenController = async (req: Request, res: Response) => {
 
     const { newAccessToken, newRefreshToken } = await refreshToken({ token });
 
-    res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      maxAge: ACCESS_TOKEN_AGE,
-      secure: isProduction,
-      sameSite: "strict",
-    });
+    res.cookie("accessToken", newAccessToken, cookieOptions);
 
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      maxAge: REFRESH_TOKEN_AGE,
-      secure: isProduction,
-      sameSite: "strict",
-    });
+    res.cookie("refreshToken", newRefreshToken, cookieOptions);
 
     return res.json({ success: true });
   } catch (err) {
