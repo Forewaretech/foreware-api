@@ -7,8 +7,8 @@ import {
   hashToken,
   saveRefreshToken,
 } from "./jwt.service.js";
-import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
 import jwt from "jsonwebtoken";
+import type { JwtPayloadWithUserId } from "../../@types/express/jwt.js";
 
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findFirst({ where: { email } });

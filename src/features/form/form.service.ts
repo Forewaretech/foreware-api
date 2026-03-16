@@ -1,5 +1,6 @@
 // form.service.ts
 import { prisma } from "../../config/db.js";
+import type { FormField } from "../../generated/prisma/client.js";
 import {
   FieldType,
   FormStatus,
@@ -61,14 +62,14 @@ export const updateForm = async (id: string, data: UpdateFormDTO) => {
       where: { formId: id },
     });
 
-    const existingIds = existingFields.map((f) => f.id);
+    const existingIds = existingFields.map((f: FormField) => f.id);
     const incomingIds = data.fields
       .filter((f) => f.id)
       .map((f) => f.id as string);
 
     // 3️ Delete removed fields
     const idsToDelete = existingIds.filter(
-      (existingId) => !incomingIds.includes(existingId),
+      (existingId: string) => !incomingIds.includes(existingId),
     );
 
     if (idsToDelete.length > 0) {

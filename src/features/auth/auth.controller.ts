@@ -1,7 +1,5 @@
 import type { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 
-import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
 import {
   getAuthUser,
   loginUser,
@@ -9,13 +7,6 @@ import {
   resetPassword,
 } from "./auth.service.js";
 import { ACCESS_TOKEN_AGE, REFRESH_TOKEN_AGE } from "./constants.js";
-import {
-  deleteRefreshToken,
-  generateAccessToken,
-  generateRefreshToken,
-  hashToken,
-} from "./jwt.service.js";
-import { prisma } from "../../config/db.js";
 
 export const isProduction =
   process.env.NODE_ENV === "production" ? true : false;

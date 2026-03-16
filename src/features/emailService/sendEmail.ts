@@ -1,6 +1,5 @@
-import { APP_NAME } from "../../config/contants";
-import { AppError } from "../errors";
-import mailTransporter from "./transporter";
+import { AppError } from "../../utils/AppError.js";
+import mailTransporter from "./transporter.js";
 
 type MailRecipientType = {
   html: string;
@@ -22,7 +21,7 @@ const sendEmail = async ({
     const mailOptions = {
       to: email,
       from: {
-        name: sender || APP_NAME,
+        name: sender || process.env.APP_NAME!,
         address: fromEmail,
       },
       subject,
@@ -53,9 +52,9 @@ export const sendGEmail = async ({
 
   if (fromEmail) {
     const mailOptions = {
-      to: email || "khemwork1@gmail.com",
+      to: email,
       from: {
-        name: name || "Contact",
+        name: name || process.env.APP_NAME!,
         address: fromEmail,
       },
       subject,
@@ -70,11 +69,7 @@ export const sendGEmail = async ({
       }).sendMail(mailOptions);
       console.log("Email sent: " + info.response);
     } catch (error) {
-      console.log(
-        "SENDING EMAIL FAILED",
-        email || "khemwork1@gmail.com",
-        error,
-      );
+      console.log("SENDING EMAIL FAILED", email, error);
     }
   }
 };
