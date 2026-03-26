@@ -4,7 +4,7 @@ export async function logActivity(data: {
   action: string;
   detail: string;
   userId: string;
-  metadata: any;
+  metadata?: any;
 }) {
   return prisma.activityLog.create({
     data,

@@ -9,6 +9,7 @@ import {
 } from "./jwt.service.js";
 import jwt from "jsonwebtoken";
 import type { JwtPayloadWithUserId } from "../../@types/express/jwt.js";
+import { logActivity } from "../activity/activity.service.js";
 
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findFirst({ where: { email } });
@@ -42,7 +43,6 @@ export const getAuthUser = (id: string) => {
 export const refreshToken = async (data: { token: string }) => {
   const { token } = data;
 
-  console.log("TOKEN: ", token);
   try {
     // Step 1 — Verify JWT signature
     let decoded: JwtPayloadWithUserId;
@@ -126,6 +126,13 @@ export const resetPassword = async (data: {
     data: {
       password: hashed,
     },
+  });
+
+  await logActivity({
+    action: "Password reset",
+    detail: `For: ${updatedUser.email}`,
+    metadata: { date: Date.now() },
+    userId: updatedUser.id,
   });
 
   return updatedUser;
