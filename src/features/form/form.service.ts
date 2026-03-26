@@ -7,6 +7,7 @@ import {
   TriggerType,
 } from "../../generated/prisma/enums.js";
 import { removeUndefinedFields } from "../../utils/prisma_helpers.js";
+import { logActivity } from "../activity/activity.service.js";
 import type { CreateFormDTO, UpdateFormDTO } from "./form.validation.js";
 
 export const createForm = async (data: CreateFormDTO) => {
@@ -30,6 +31,13 @@ export const createForm = async (data: CreateFormDTO) => {
         })),
       },
     },
+  });
+
+  await logActivity({
+    action: "Created Form",
+    detail: `Name: ${form.name}`,
+    metadata: { formId: form.id, date: Date.now() },
+    userId: form.userId || "",
   });
 
   return form;
@@ -105,6 +113,13 @@ export const updateForm = async (id: string, data: UpdateFormDTO) => {
       }
     }
 
+    await logActivity({
+      action: "Updated Form",
+      detail: `Name: ${updatedForm.name}`,
+      metadata: { formId: updatedForm.id, date: Date.now() },
+      userId: updatedForm.userId || "",
+    });
+
     return updatedForm;
   });
 };
@@ -138,7 +153,16 @@ export const getFormById = async (id: string) => {
 };
 
 export const deleteForm = async (id: string) => {
-  return await prisma.form.delete({
+  const deteledPost = await prisma.form.delete({
     where: { id },
   });
+
+  await logActivity({
+    action: "Deleted Form",
+    detail: `Name: ${deteledPost.name}`,
+    metadata: { formId: deteledPost.id, date: Date.now() },
+    userId: deteledPost.userId || "",
+  });
+
+  return;
 };

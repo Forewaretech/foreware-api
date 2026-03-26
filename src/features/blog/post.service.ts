@@ -44,7 +44,7 @@ export const deletePost = async (id: string) => {
   await logActivity({
     action: "Deleted post",
     detail: `Title: ${post.title}`,
-    metadata: { postId: post.id, metadata: { date: Date.now() } },
+    metadata: { postId: post.id, date: Date.now() },
     userId: post.userId,
   });
 
@@ -94,7 +94,7 @@ export const createPost = async (postData: PostDTO, userId: string) => {
   await logActivity({
     action: "New post created",
     detail: `Title: ${createdPost.title}`,
-    metadata: { postId: createdPost.id, metadata: { date: Date.now() } },
+    metadata: { postId: createdPost.id, date: Date.now() },
     userId: createdPost.userId,
   });
 
@@ -115,7 +115,7 @@ export const updatePost = async (id: string, updateData: Partial<PostDTO>) => {
   await logActivity({
     action: "Post updated",
     detail: `Updated: ${existingPost.title}`,
-    metadata: { postId: existingPost.id, metadata: { date: Date.now() } },
+    metadata: { postId: existingPost.id, date: Date.now() },
     userId: existingPost.userId,
   });
 
