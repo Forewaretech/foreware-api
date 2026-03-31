@@ -87,6 +87,7 @@ export const createPost = async (postData: PostDTO, userId: string) => {
       featuredImageTitle: postData.featuredImageTitle || null,
       seoDescription: postData.seoDescription || null,
       seoTitle: postData.seoTitle || null,
+      author: postData.author || null,
       userId: superAdmin.id,
     },
   });

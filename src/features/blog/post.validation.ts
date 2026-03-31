@@ -28,6 +28,7 @@ export const updatePostValidationSchema = z.object({
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
     category: z.string().optional(),
+    author: z.string().optional(),
   }),
 });
 
@@ -39,4 +40,5 @@ export const idValidationSchema = z.object({
 
 export type PostDTO = z.infer<typeof postValidationSchema>["body"] & {
   summary: string;
+  author?: string;
 };
