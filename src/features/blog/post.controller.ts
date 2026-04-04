@@ -30,6 +30,7 @@ export const createPostController = async (req: Request, res: Response) => {
     featuredImageTitle,
     seoDescription,
     seoTitle,
+    author,
   } = req.body;
 
   const newPost = await createPost(
@@ -45,6 +46,7 @@ export const createPostController = async (req: Request, res: Response) => {
       featuredImageTitle,
       seoDescription,
       seoTitle,
+      author,
     },
     req.user?.id ?? "",
   );

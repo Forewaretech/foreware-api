@@ -6,10 +6,11 @@ import {
   TrackingType,
   TrackingStatus,
 } from "../../generated/prisma/enums.js";
+import { logActivity } from "../activity/activity.service.js";
 import type { CreateTrackingDTO } from "./tracking.validation.js";
 
 export const createTrackingCode = async (data: CreateTrackingDTO) => {
-  return prisma.trackingCode.create({
+  const createdCode = await prisma.trackingCode.create({
     data: {
       name: data.name,
       platform: data.platform.toUpperCase() as Platform,
@@ -19,6 +20,18 @@ export const createTrackingCode = async (data: CreateTrackingDTO) => {
       status: (data.status?.toUpperCase() as TrackingStatus) ?? "INACTIVE",
     },
   });
+
+  await logActivity({
+    action: "Created Tracking Code",
+    detail: `Name: ${createdCode.name}`,
+    metadata: {
+      leadId: createdCode.id,
+      date: Date.now(),
+    },
+    userId: createdCode?.userId || "",
+  });
+
+  return;
 };
 
 export const getAllTrackingCodes = async () => {
@@ -33,7 +46,7 @@ export const updateTrackingCode = async (
   id: string,
   data: Partial<CreateTrackingDTO>,
 ) => {
-  return prisma.trackingCode.update({
+  const updatedTracking = await prisma.trackingCode.update({
     where: { id },
     data: {
       ...(data.name && { name: data.name }),
@@ -52,10 +65,34 @@ export const updateTrackingCode = async (
       }),
     },
   });
+
+  await logActivity({
+    action: "Deleted Tracking Code",
+    detail: `Name: ${updatedTracking.name}`,
+    metadata: {
+      leadId: updatedTracking.id,
+      date: Date.now(),
+    },
+    userId: updatedTracking?.userId || "",
+  });
+
+  return;
 };
 
 export const deleteTrackingCode = async (id: string) => {
-  return prisma.trackingCode.delete({ where: { id } });
+  const deletedCode = await prisma.trackingCode.delete({ where: { id } });
+
+  await logActivity({
+    action: "Deleted Tracking Code",
+    detail: `Name: ${deletedCode.name}`,
+    metadata: {
+      leadId: deletedCode.id,
+      date: Date.now(),
+    },
+    userId: deletedCode?.userId || "",
+  });
+
+  return deletedCode;
 };
 
 export const getPublicTrackingCodes = async (placement?: string) => {

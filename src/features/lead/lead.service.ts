@@ -1,4 +1,5 @@
 import { prisma } from "../../config/db.js";
+import { logActivity } from "../activity/activity.service.js";
 
 export const createOrAttachLead = async (
   email: string,
@@ -27,6 +28,16 @@ export const createOrAttachLead = async (
       submissions: {
         connect: { id: submissionId },
       },
+    },
+  });
+
+  await logActivity({
+    action: "Updated Lead",
+    detail: `Name: ${newLead.name}`,
+    metadata: {
+      leadId: newLead.id,
+      date: Date.now(),
+      userId: newLead?.source || "",
     },
   });
 
@@ -60,14 +71,38 @@ export const getAllLeads = async () => {
 };
 
 export const updateLeadStatus = async (id: string, status: any) => {
-  return prisma.lead.update({
+  const updatedLead = await prisma.lead.update({
     where: { id },
     data: { status },
   });
+
+  await logActivity({
+    action: "Updated Lead",
+    detail: `Name: ${updatedLead.name}`,
+    metadata: {
+      leadId: updatedLead.id,
+      date: Date.now(),
+      userId: updatedLead?.source || "",
+    },
+  });
+
+  return updatedLead;
 };
 
 export const deleteLead = async (id: string) => {
-  return prisma.lead.delete({
+  const deletedLead = await prisma.lead.delete({
     where: { id },
   });
+
+  await logActivity({
+    action: "Deleted Lead",
+    detail: `Name: ${deletedLead.name}`,
+    metadata: {
+      leadId: deletedLead.id,
+      date: Date.now(),
+      userId: deletedLead?.source || "",
+    },
+  });
+
+  return deletedLead;
 };

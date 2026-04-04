@@ -7,8 +7,9 @@ import {
   hashToken,
   saveRefreshToken,
 } from "./jwt.service.js";
-import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
 import jwt from "jsonwebtoken";
+import type { JwtPayloadWithUserId } from "../../@types/express/jwt.js";
+import { logActivity } from "../activity/activity.service.js";
 
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findFirst({ where: { email } });
@@ -42,7 +43,6 @@ export const getAuthUser = (id: string) => {
 export const refreshToken = async (data: { token: string }) => {
   const { token } = data;
 
-  console.log("TOKEN: ", token);
   try {
     // Step 1 — Verify JWT signature
     let decoded: JwtPayloadWithUserId;
@@ -128,7 +128,32 @@ export const resetPassword = async (data: {
     },
   });
 
+  await logActivity({
+    action: "Password reset",
+    detail: `For: ${updatedUser.email}`,
+    metadata: { date: Date.now() },
+    userId: updatedUser.id,
+  });
+
   return updatedUser;
+};
+
+export const configureCookieOptions = (age: number) => {
+  const cookieOptions: any = {
+    httpOnly: true,
+    maxAge: age,
+  };
+
+  // Check if we are on Production
+  if (process.env.NODE_ENV === "production") {
+    cookieOptions.secure = true;
+    cookieOptions.sameSite = "none"; // Required for Vercel -> Render
+  } else {
+    cookieOptions.secure = false;
+    cookieOptions.sameSite = "lax"; // Standard for localhost
+  }
+
+  return cookieOptions;
 };
 
 // export const requestPasswordReset = async (email: string) => {

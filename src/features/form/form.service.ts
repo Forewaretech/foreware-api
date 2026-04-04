@@ -1,11 +1,13 @@
 // form.service.ts
 import { prisma } from "../../config/db.js";
+import type { FormField } from "../../generated/prisma/client.js";
 import {
   FieldType,
   FormStatus,
   TriggerType,
 } from "../../generated/prisma/enums.js";
 import { removeUndefinedFields } from "../../utils/prisma_helpers.js";
+import { logActivity } from "../activity/activity.service.js";
 import type { CreateFormDTO, UpdateFormDTO } from "./form.validation.js";
 
 export const createForm = async (data: CreateFormDTO) => {
@@ -29,6 +31,13 @@ export const createForm = async (data: CreateFormDTO) => {
         })),
       },
     },
+  });
+
+  await logActivity({
+    action: "Created Form",
+    detail: `Name: ${form.name}`,
+    metadata: { formId: form.id, date: Date.now() },
+    userId: form.userId || "",
   });
 
   return form;
@@ -61,14 +70,14 @@ export const updateForm = async (id: string, data: UpdateFormDTO) => {
       where: { formId: id },
     });
 
-    const existingIds = existingFields.map((f) => f.id);
+    const existingIds = existingFields.map((f: FormField) => f.id);
     const incomingIds = data.fields
       .filter((f) => f.id)
       .map((f) => f.id as string);
 
     // 3️ Delete removed fields
     const idsToDelete = existingIds.filter(
-      (existingId) => !incomingIds.includes(existingId),
+      (existingId: string) => !incomingIds.includes(existingId),
     );
 
     if (idsToDelete.length > 0) {
@@ -104,6 +113,13 @@ export const updateForm = async (id: string, data: UpdateFormDTO) => {
       }
     }
 
+    await logActivity({
+      action: "Updated Form",
+      detail: `Name: ${updatedForm.name}`,
+      metadata: { formId: updatedForm.id, date: Date.now() },
+      userId: updatedForm.userId || "",
+    });
+
     return updatedForm;
   });
 };
@@ -137,7 +153,16 @@ export const getFormById = async (id: string) => {
 };
 
 export const deleteForm = async (id: string) => {
-  return await prisma.form.delete({
+  const deteledPost = await prisma.form.delete({
     where: { id },
   });
+
+  await logActivity({
+    action: "Deleted Form",
+    detail: `Name: ${deteledPost.name}`,
+    metadata: { formId: deteledPost.id, date: Date.now() },
+    userId: deteledPost.userId || "",
+  });
+
+  return;
 };

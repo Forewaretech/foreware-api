@@ -1,21 +1,14 @@
 import type { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 
-import type { JwtPayloadWithUserId } from "../../@types/jwt.js";
 import {
+  configureCookieOptions,
   getAuthUser,
   loginUser,
   refreshToken,
   resetPassword,
 } from "./auth.service.js";
 import { ACCESS_TOKEN_AGE, REFRESH_TOKEN_AGE } from "./constants.js";
-import {
-  deleteRefreshToken,
-  generateAccessToken,
-  generateRefreshToken,
-  hashToken,
-} from "./jwt.service.js";
-import { prisma } from "../../config/db.js";
+import { deleteRefreshToken } from "./jwt.service.js";
 
 export const isProduction =
   process.env.NODE_ENV === "production" ? true : false;
@@ -27,17 +20,17 @@ export async function loginController(req: Request, res: Response) {
   try {
     const { accessToken, refreshToken } = await loginUser(email, password);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      maxAge: ACCESS_TOKEN_AGE,
-      secure: isProduction,
-    });
+    res.cookie(
+      "accessToken",
+      accessToken,
+      configureCookieOptions(ACCESS_TOKEN_AGE),
+    );
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      maxAge: REFRESH_TOKEN_AGE,
-      secure: isProduction,
-    });
+    res.cookie(
+      "refreshToken",
+      refreshToken,
+      configureCookieOptions(REFRESH_TOKEN_AGE),
+    );
 
     res.json({ success: true, data: { accessToken, refreshToken } });
   } catch (err: any) {
@@ -64,19 +57,17 @@ export const refreshTokenController = async (req: Request, res: Response) => {
 
     const { newAccessToken, newRefreshToken } = await refreshToken({ token });
 
-    res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      maxAge: ACCESS_TOKEN_AGE,
-      secure: isProduction,
-      sameSite: "strict",
-    });
+    res.cookie(
+      "accessToken",
+      newAccessToken,
+      configureCookieOptions(ACCESS_TOKEN_AGE),
+    );
 
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      maxAge: REFRESH_TOKEN_AGE,
-      secure: isProduction,
-      sameSite: "strict",
-    });
+    res.cookie(
+      "refreshToken",
+      newRefreshToken,
+      configureCookieOptions(REFRESH_TOKEN_AGE),
+    );
 
     return res.json({ success: true });
   } catch (err) {
@@ -85,6 +76,47 @@ export const refreshTokenController = async (req: Request, res: Response) => {
       .json({ message: "Refresh failed", error: (err as Error).message });
   }
 };
+
+export const resetPasswordController = async (req: Request, res: Response) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const data = await resetPassword({
+    userId: req.user?.id ?? "",
+    currentPassword,
+    newPassword,
+  });
+
+  res.status(200).json({ success: true, data });
+};
+
+export const meController = async (req: Request, res: Response) => {
+  const authUser = await getAuthUser(req.user?.id!);
+
+  res.json({ success: true, data: authUser });
+};
+
+// Handles user logout, deleting token in the database.
+export async function logoutController(req: Request, res: Response) {
+  console.log("TOKENS: ", req.cookies.refreshToken, req.body.refreshToken);
+
+  const refreshToken =
+    req.cookies.refreshToken ||
+    req.body.refreshToken ||
+    req.headers["x-refresh-token"];
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: "No refresh token provided" });
+  }
+
+  // Remove refresh token from DB
+  await deleteRefreshToken(refreshToken);
+
+  // Clear cookies if they exist
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+
+  return res.json({ message: "Logged out successfully" });
+}
 
 // export const refreshTokenController = async (req: Request, res: Response) => {
 //   try {
@@ -130,41 +162,3 @@ export const refreshTokenController = async (req: Request, res: Response) => {
 //     res.status(500).json({ message: "Failed to send reset link." });
 //   }
 // };
-
-export const resetPasswordController = async (req: Request, res: Response) => {
-  const { currentPassword, newPassword } = req.body;
-
-  const data = await resetPassword({
-    userId: req.user?.id ?? "",
-    currentPassword,
-    newPassword,
-  });
-
-  res.status(200).json({ success: true, data });
-};
-
-export const meController = async (req: Request, res: Response) => {
-  const authUser = await getAuthUser(req.user?.id!);
-
-  res.json({ success: true, data: authUser });
-};
-
-// Handles user logout, deleting token in the database.
-export async function logoutController(req: Request, res: Response) {
-  console.log("TOKENS: ", req.cookies.refreshToken, req.body.refreshToken);
-
-  const refreshToken =
-    req.cookies.refreshToken ||
-    req.body.refreshToken ||
-    req.headers["x-refresh-token"];
-
-  if (!refreshToken) {
-    return res.status(400).json({ message: "No refresh token provided" });
-  }
-
-  // Clear cookies if they exist
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
-
-  return res.json({ message: "Logged out successfully" });
-}
