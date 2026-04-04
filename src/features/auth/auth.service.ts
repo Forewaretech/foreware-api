@@ -138,6 +138,24 @@ export const resetPassword = async (data: {
   return updatedUser;
 };
 
+export const configureCookieOptions = (age: number) => {
+  const cookieOptions: any = {
+    httpOnly: true,
+    maxAge: age,
+  };
+
+  // Check if we are on Production
+  if (process.env.NODE_ENV === "production") {
+    cookieOptions.secure = true;
+    cookieOptions.sameSite = "none"; // Required for Vercel -> Render
+  } else {
+    cookieOptions.secure = false;
+    cookieOptions.sameSite = "lax"; // Standard for localhost
+  }
+
+  return cookieOptions;
+};
+
 // export const requestPasswordReset = async (email: string) => {
 //   const user = await User.findOne({ email });
 

@@ -42,7 +42,8 @@ export const saveRefreshToken = async ({
 
 export const deleteRefreshToken = async (refreshToken: string) => {
   // Remove refresh token from DB
-  await prisma.refreshToken.delete({ where: { token: refreshToken } });
+  const hashedToken = hashToken(refreshToken);
+  await prisma.refreshToken.delete({ where: { token: hashedToken } });
 };
 
 // export const generatePasswordResetToken = async (userId: Types.ObjectId) => {
