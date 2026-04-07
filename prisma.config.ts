@@ -13,3 +13,4 @@ export default defineConfig({
     url: env("DATABASE_URL"),
   },
 });
+// foreware-bucket-545705576391-us-east-1-an
