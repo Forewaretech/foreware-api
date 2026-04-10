@@ -2,8 +2,7 @@ import cors from "cors";
 import { AppError } from "../utils/AppError.js";
 
 const allowedOrigins = [
-  "https://foreware-admin.vercel.app",
-  "https://foreware-client.vercel.app",
+  "https://admin.forewaretechnologies.com",
   "https://www.forewaretechnologies.com",
   "http://localhost:8080",
   "http://localhost:3000",
