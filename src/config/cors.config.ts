@@ -1,12 +1,7 @@
 import cors from "cors";
 import { AppError } from "../utils/AppError.js";
 
-const allowedOrigins = [
-  "https://admin.forewaretechnologies.com",
-  "https://www.forewaretechnologies.com",
-  "http://localhost:8080",
-  "http://localhost:3000",
-];
+const allowedOrigins = [process.env.ADMIN_URL, process.env.CLIENT_URL];
 
 export const corsOptions = {
   origin: function (origin: any, callback: any) {
