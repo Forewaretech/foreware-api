@@ -5,40 +5,46 @@ type MailRecipientType = {
   html: string;
   subject: string;
   email?: string;
-  sender?: string;
+  senderName?: string;
   name?: string;
 };
 
 const sendEmail = async ({
-  email,
+  email, // The recipient (Admin)
   html,
   subject,
-  sender,
+  senderName, // Optional name for the sender
 }: MailRecipientType) => {
-  const fromEmail = process.env.EMAIL;
+  const fromEmail = process.env.EMAIL || "noreply@forewaretechnologies.com";
 
-  if (fromEmail) {
-    const mailOptions = {
-      to: email,
-      from: {
-        name: sender || process.env.APP_NAME!,
-        address: fromEmail,
-      },
-      subject,
-      html,
-    };
+  if (!email) {
+    throw new AppError("No recipient email provided", 400);
+  }
 
-    try {
-      const info = await mailTransporter({
-        host: process.env.EMAIL_HOST!,
-        pass: process.env.EMAIL_PASS!,
-        user: process.env.EMAIL!,
-      }).sendMail(mailOptions);
-      console.log("Email sent: " + info.response);
-    } catch (error: any) {
-      console.log("SENDING EMAIL FAILED", email, error);
-      throw new AppError(error.message || "SENDING EMAIL FAILED", 502);
-    }
+  const mailOptions = {
+    to: email,
+    // The "from" should be your verified system email
+    from: {
+      name: senderName || process.env.APP_NAME || "Foreware Technologies",
+      address: fromEmail,
+    },
+    subject,
+    html,
+  };
+
+  try {
+    const transporter = mailTransporter({
+      host: process.env.EMAIL_HOST!,
+      pass: process.env.EMAIL_PASS!,
+      user: process.env.EMAIL!,
+    });
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: " + info.response);
+    return info;
+  } catch (error: any) {
+    console.error("SENDING EMAIL FAILED", email, error);
+    throw new AppError(error.message || "SENDING EMAIL FAILED", 502);
   }
 };
 
