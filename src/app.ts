@@ -13,6 +13,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import activityRoutes from "./features/activity/activitty.routes.js";
 import emailToRoutes from "./features/emailto/emailto.routes.js";
+import contactRoutes from "./features/contact/contact.routes.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/submissions", submissionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/activity-logs", activityRoutes);
 app.use("/api/emailto", emailToRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.use(errorHandler);
 
