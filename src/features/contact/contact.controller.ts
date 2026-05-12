@@ -2,7 +2,21 @@ import type { Request, Response } from "express";
 import { contactUs } from "./contact.service.js";
 
 export const contactUsController = async (req: Request, res: Response) => {
-  const result = await contactUs(req.body);
+  res.status(202).json({
+    status: "success",
+    data: {
+      message:
+        "Your message has been received. We'll get back to you shortly.",
+    },
+  });
 
-  res.status(201).json({ status: "success", data: result });
+  void contactUs(req.body)
+    .then((result) => {
+      if (!result?.sent) {
+        console.error("[contact] background email did not send:", result);
+      }
+    })
+    .catch((err) => {
+      console.error("[contact] background email crashed:", err);
+    });
 };
