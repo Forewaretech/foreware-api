@@ -77,13 +77,11 @@ export const contactUs = async (data: ContactType) => {
     </html>
   `;
 
-  console.log("3. Attempting to call sendEmail...");
   const result = await sendEmail({
     html: htmlContent,
     subject: `${appName} - Inquiry from ${data.name}`,
     email: sendTo?.email || "forewaretech@gmail.com",
-    senderName: appName, // Explicitly pass the sender name
+    senderName: appName,
   });
-  console.log("4. Final result:", result);
   return result;
 };

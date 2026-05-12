@@ -1,20 +1,26 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const mailTransporter = (config: {
-  host: string;
-  user: string;
-  pass: string;
-}) =>
-  nodemailer.createTransport({
-    host: config.host, // SMTP server address
-    port: 465, // SMTP server port (usually 465 for secure, 587 for non-secure)
-    secure: true, // True for 465, false for other ports
-    auth: {
-      user: config.user,
-      pass: config.pass,
-    },
-    pool: true,
-    maxConnections: 5,
-  });
+const rawKey = process.env.RESEND_API_KEY;
+const apiKey = rawKey?.trim().replace(/^["']|["']$/g, "");
 
-export default mailTransporter;
+if (!apiKey) {
+  console.warn(
+    "RESEND_API_KEY is not set — outbound emails will fail until configured.",
+  );
+} else if (rawKey !== apiKey) {
+  console.warn(
+    "[email] RESEND_API_KEY had surrounding whitespace or quotes — trimmed. " +
+      "Fix the .env value to avoid auth-header issues.",
+  );
+}
+
+if (apiKey && !/^re_[A-Za-z0-9_]+$/.test(apiKey)) {
+  console.warn(
+    "[email] RESEND_API_KEY does not match the expected `re_…` shape; " +
+      "Resend will likely reject it.",
+  );
+}
+
+const resend = new Resend(apiKey);
+
+export default resend;
